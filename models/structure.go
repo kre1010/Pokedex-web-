@@ -2,10 +2,10 @@ package models
 
 type Pokemon struct {
 	Name     Names   `json:"name"`
-	Id       int     `json:"pokemon_id"`
+	Id       int     `json:"pokedex_id"`
 	Category string  `json:"category"`
 	Types    []Types `json:"types"`
-	Image    Sprites `json:"image"`
+	Sprites  Sprites `json:"sprites"`
 }
 
 type Names struct {
@@ -17,6 +17,6 @@ type Sprites struct {
 }
 
 type Types struct {
-	Name  string `json:"regular"`
+	Name  string `json:"name"`
 	Image string `json:"image"`
 }

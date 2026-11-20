@@ -16,7 +16,7 @@
             {{range .}}
             <a class="pokemon-card" href="/pokemon/{{.Id}}">
                 <span class="pokemon-number">#{{.Id}}</span>
-                <img src="{{.Image.Regular}}" alt="{{.Name.Fr}}" loading="lazy">
+                <img src="{{.Sprites.Regular}}" alt="{{.Name.Fr}}" loading="lazy">
                 <h2 class="pokemon-name">{{.Name.Fr}}</h2>
             </a>
             {{else}}
