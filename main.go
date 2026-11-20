@@ -33,7 +33,7 @@ func main() {
 
 	http.HandleFunc("/", homeHandler)
 
-	addr := ":8080"
+	addr := ":8090"
 	fmt.Printf("Serveur lancé sur http://localhost%s\n", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatal(err)

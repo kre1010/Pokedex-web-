@@ -14,10 +14,10 @@
     <main>
         <div class="pokemon-grid">
             {{range .}}
-            <a class="pokemon-card" href="/pokemon/{{.ID}}">
-                <span class="pokemon-number">#{{.Numero}}</span>
-                <img src="{{.ImageURL}}" alt="{{.NomFR}}" loading="lazy">
-                <h2 class="pokemon-name">{{.NomFR}}</h2>
+            <a class="pokemon-card" href="/pokemon/{{.Id}}">
+                <span class="pokemon-number">#{{.Id}}</span>
+                <img src="{{.Image.Regular}}" alt="{{.Name.Fr}}" loading="lazy">
+                <h2 class="pokemon-name">{{.Name.Fr}}</h2>
             </a>
             {{else}}
             <p class="empty-message">Aucun Pokémon trouvé pour le moment.</p>
