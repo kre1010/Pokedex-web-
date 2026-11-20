@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex - Liste des Pokémon</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header>
+        <h1>Liste des Pokémon</h1>
+    </header>
+
+    <main>
+        <div class="pokemon-grid">
+            {{range .}}
+            <a class="pokemon-card" href="/pokemon/{{.ID}}">
+                <span class="pokemon-number">#{{.Numero}}</span>
+                <img src="{{.ImageURL}}" alt="{{.NomFR}}" loading="lazy">
+                <h2 class="pokemon-name">{{.NomFR}}</h2>
+            </a>
+            {{else}}
+            <p class="empty-message">Aucun Pokémon trouvé pour le moment.</p>
+            {{end}}
+        </div>
+    </main>
+</body>
+</html>
