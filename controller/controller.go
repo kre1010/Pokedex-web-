@@ -32,7 +32,6 @@ func New(templates *template.Template, getByIDOrAll func(idStr string) (any, err
 	}
 }
 
-// Permet de brancher la recherche par nom sans casser New(...)
 func (c *Controller) SetSearchByName(fn func(nom string) (any, error)) {
 	c.searchByName = fn
 }

@@ -81,14 +81,12 @@ func (s *PokemonService) GetByIDOrAll(idStr string) ([]PokemonDetail, error) {
 	return []PokemonDetail{one}, nil
 }
 
-// SearchByName récupère tous les Pokémon puis filtre sur le nom français si `nom` est renseigné.
 func (s *PokemonService) SearchByName(nom string) ([]PokemonDetail, error) {
 	all, err := s.GetByIDOrAll("")
 	if err != nil {
 		return nil, err
 	}
 
-	// Normalisation : suppression des espaces inutiles + minuscules
 	query := strings.ToLower(strings.TrimSpace(nom))
 	if query == "" {
 		return all, nil

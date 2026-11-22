@@ -20,13 +20,12 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// Route GET /pokemon/{id}
-	mux.HandleFunc("GET /pokemon/{id}", func(w http.ResponseWriter, r *http.Request) {
+    	mux.HandleFunc("GET /pokemon/{id}", func(w http.ResponseWriter, r *http.Request) {
 		idParam := r.PathValue("id")
 
 		pokemons, err := svc.GetByIDOrAll(idParam)
 		if err != nil {
-			// Si le service renvoie ErrBadRequest, on affiche un message clair (400)
+			
 			if errors.Is(err, ErrBadRequest) {
 				w.WriteHeader(http.StatusBadRequest)
 				data := DetailPageData{
@@ -49,7 +48,6 @@ func main() {
 		_ = tmpl.ExecuteTemplate(w, "detail.html", data)
 	})
 
-	// Si l'URL est /pokemon/ avec rien après {id}, on affiche aussi la liste complète
 	mux.HandleFunc("GET /pokemon/", func(w http.ResponseWriter, r *http.Request) {
 		pokemons, err := svc.GetByIDOrAll("")
 		if err != nil {
