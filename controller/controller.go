@@ -14,9 +14,15 @@ type ErrorData struct {
 	Message string
 }
 
+type PokemonListPageData struct {
+	Pokemons     any
+	NomRecherche string
+}
+
 type Controller struct {
-	templates *template.Template
+	templates    *template.Template
 	getByIDOrAll func(idStr string) (any, error)
+	searchByName func(nom string) (any, error)
 }
 
 func New(templates *template.Template, getByIDOrAll func(idStr string) (any, error)) *Controller {
@@ -24,6 +30,11 @@ func New(templates *template.Template, getByIDOrAll func(idStr string) (any, err
 		templates:    templates,
 		getByIDOrAll: getByIDOrAll,
 	}
+}
+
+// Permet de brancher la recherche par nom sans casser New(...)
+func (c *Controller) SetSearchByName(fn func(nom string) (any, error)) {
+	c.searchByName = fn
 }
 
 func (c *Controller) showTemplate(w http.ResponseWriter, name string, data any) {
@@ -65,12 +76,28 @@ func (c *Controller) Home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) ListPokemon(w http.ResponseWriter, r *http.Request) {
-	pokemons, err := c.getByIDOrAll("")
+	nom := r.URL.Query().Get("nom")
+
+	var (
+		pokemons any
+		err      error
+	)
+
+	if nom != "" && c.searchByName != nil {
+		pokemons, err = c.searchByName(nom)
+	} else {
+		pokemons, err = c.getByIDOrAll("")
+	}
+
 	if err != nil {
 		c.handleServiceError(w, err)
 		return
 	}
-	c.showTemplate(w, "pokemon.html", pokemons)
+
+	c.showTemplate(w, "pokemon.html", PokemonListPageData{
+		Pokemons:     pokemons,
+		NomRecherche: nom,
+	})
 }
 
 func (c *Controller) DetailPokemon(w http.ResponseWriter, r *http.Request) {

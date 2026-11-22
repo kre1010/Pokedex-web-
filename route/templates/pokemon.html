@@ -9,18 +9,39 @@
 <body>
     <header>
         <h1>Liste des Pokémon</h1>
+
+        <form method="GET" action="/pokemon" class="search-form">
+            <label for="nom">Rechercher par nom :</label>
+            <input
+                type="text"
+                id="nom"
+                name="nom"
+                value="{{.NomRecherche}}"
+                placeholder="Ex : pika"
+            >
+            <button type="submit">Rechercher</button>
+            {{if .NomRecherche}}
+                <a href="/pokemon" class="search-reset">Réinitialiser</a>
+            {{end}}
+        </form>
     </header>
 
     <main>
         <div class="pokemon-grid">
-            {{range .}}
+            {{range .Pokemons}}
             <a class="pokemon-card" href="/pokemon/{{.Id}}">
                 <span class="pokemon-number">#{{.Id}}</span>
                 <img src="{{.Sprites.Regular}}" alt="{{.Name.Fr}}" loading="lazy">
                 <h2 class="pokemon-name">{{.Name.Fr}}</h2>
             </a>
             {{else}}
-            <p class="empty-message">Aucun Pokémon trouvé pour le moment.</p>
+            <p class="empty-message">
+                {{if .NomRecherche}}
+                    Aucun Pokémon trouvé pour « {{.NomRecherche}} ».
+                {{else}}
+                    Aucun Pokémon trouvé pour le moment.
+                {{end}}
+            </p>
             {{end}}
         </div>
     </main>

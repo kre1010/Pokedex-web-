@@ -17,6 +17,67 @@ header {
     text-align: center;
 }
 
+/* --- NOUVEAU : Formulaire de recherche --- */
+.search-form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.search-form label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #475569;
+}
+
+.search-form input {
+    padding: 0.6rem 1rem;
+    width: 250px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-form input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.search-form button {
+    padding: 0.6rem 1.25rem;
+    background-color: #ef4444; /* Rouge Pokédex */
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.search-form button:hover {
+    background-color: #dc2626;
+}
+
+.search-reset {
+    font-size: 0.9rem;
+    color: #64748b;
+    text-decoration: none;
+    padding: 0.5rem;
+    transition: color 0.15s ease;
+}
+
+.search-reset:hover {
+    color: #1e293b;
+    text-decoration: underline;
+}
+/* ----------------------------------------- */
+
 .pokemon-grid {
     max-width: 1100px;
     margin: 0 auto;

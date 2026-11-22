@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -38,7 +39,6 @@ func NewPokemonService(baseURL string) *PokemonService {
 }
 
 func (s *PokemonService) GetByIDOrAll(idStr string) ([]PokemonDetail, error) {
-	
 	if idStr == "" {
 		resp, err := s.Client.Get(s.BaseURL + "/api/pokemon")
 		if err != nil {
@@ -53,14 +53,11 @@ func (s *PokemonService) GetByIDOrAll(idStr string) ([]PokemonDetail, error) {
 		return list, nil
 	}
 
-	
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		
 		return nil, ErrBadRequest
 	}
 
-	
 	url := fmt.Sprintf("%s/api/pokemon/%d", s.BaseURL, id)
 	resp, err := s.Client.Get(url)
 	if err != nil {
@@ -68,7 +65,6 @@ func (s *PokemonService) GetByIDOrAll(idStr string) ([]PokemonDetail, error) {
 	}
 	defer resp.Body.Close()
 
-	
 	if resp.StatusCode == http.StatusNotFound {
 		return []PokemonDetail{}, nil
 	}
@@ -83,4 +79,28 @@ func (s *PokemonService) GetByIDOrAll(idStr string) ([]PokemonDetail, error) {
 	}
 
 	return []PokemonDetail{one}, nil
+}
+
+// SearchByName récupère tous les Pokémon puis filtre sur le nom français si `nom` est renseigné.
+func (s *PokemonService) SearchByName(nom string) ([]PokemonDetail, error) {
+	all, err := s.GetByIDOrAll("")
+	if err != nil {
+		return nil, err
+	}
+
+	// Normalisation : suppression des espaces inutiles + minuscules
+	query := strings.ToLower(strings.TrimSpace(nom))
+	if query == "" {
+		return all, nil
+	}
+
+	var filtered []PokemonDetail
+	for _, p := range all {
+		nomFR := strings.ToLower(strings.TrimSpace(p.NomFR))
+		if strings.Contains(nomFR, query) {
+			filtered = append(filtered, p)
+		}
+	}
+
+	return filtered, nil
 }
