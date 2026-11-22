@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -105,23 +106,77 @@ func loadPokemonFromJSON(path string) ([]PokemonItem, error) {
 	return nil, fmt.Errorf("format JSON non reconnu dans %s", path)
 }
 
-func filterPokemonByName(list []PokemonItem, nom string) []PokemonItem {
-	// 1. Normalisation : supprimer les espaces en trop et mettre en minuscules
-	query := strings.ToLower(strings.TrimSpace(nom))
-	if query == "" {
-		return list
+func getAllPokemonSafe() (any, error) {
+	list, err := api.GetAllPokemon()
+	if err == nil {
+		return list, nil
 	}
 
-	// 2. Filtrage partiel sur le nom français
-	var result []PokemonItem
-	for _, p := range list {
-		nomFR := strings.ToLower(strings.TrimSpace(p.Name.Fr))
-		if strings.Contains(nomFR, query) {
-			result = append(result, p)
+	// Secours sur pokemon.json si l'API échoue ou dépasse le délai
+	fallback, jsonErr := loadPokemonFromJSON("pokemon.json")
+	if jsonErr == nil {
+		return fallback, nil
+	}
+
+	return nil, err
+}
+
+func extractFrenchName(v reflect.Value) string {
+	if v.Kind() != reflect.Struct {
+		return ""
+	}
+
+	if f := v.FieldByName("NomFR"); f.IsValid() && f.Kind() == reflect.String {
+		return f.String()
+	}
+
+	if nameField := v.FieldByName("Name"); nameField.IsValid() {
+		if nameField.Kind() == reflect.Ptr && !nameField.IsNil() {
+			nameField = nameField.Elem()
+		}
+		if nameField.Kind() == reflect.Struct {
+			for _, fieldName := range []string{"Fr", "FR", "French"} {
+				if sub := nameField.FieldByName(fieldName); sub.IsValid() && sub.Kind() == reflect.String {
+					return sub.String()
+				}
+			}
 		}
 	}
 
-	return result
+	return ""
+}
+
+func filterPokemonByName(all any, nom string) any {
+	// 1. Normalisation : supprimer les espaces en trop et mettre en minuscules
+	query := strings.ToLower(strings.TrimSpace(nom))
+	if query == "" {
+		return all
+	}
+
+	val := reflect.ValueOf(all)
+	if val.Kind() != reflect.Slice {
+		return all
+	}
+
+	// 2. Filtrage partiel sur le nom français
+	filtered := reflect.MakeSlice(val.Type(), 0, val.Len())
+	for i := 0; i < val.Len(); i++ {
+		elem := val.Index(i)
+		target := elem
+		if target.Kind() == reflect.Ptr {
+			if target.IsNil() {
+				continue
+			}
+			target = target.Elem()
+		}
+
+		nomFR := strings.ToLower(strings.TrimSpace(extractFrenchName(target)))
+		if strings.Contains(nomFR, query) {
+			filtered = reflect.Append(filtered, elem)
+		}
+	}
+
+	return filtered.Interface()
 }
 
 func main() {
@@ -131,10 +186,10 @@ func main() {
 		log.Fatal("Erreur chargement templates : ", err)
 	}
 
-	// 2. Pont vers api pour gérer détail / 400 / 404 / 503
+	// 2. Pont vers api (avec secours pokemon.json) pour gérer liste complète, 400, 404 et 503
 	getByIDOrAll := func(idStr string) (any, error) {
 		if idStr == "" {
-			return loadPokemonFromJSON("pokemon.json")
+			return getAllPokemonSafe()
 		}
 
 		id, err := strconv.Atoi(idStr)
@@ -145,10 +200,10 @@ func main() {
 		return api.GetPokemon(id)
 	}
 
-	// 3. Créer le contrôleur + brancher la recherche par nom FR depuis pokemon.json
+	// 3. Créer le contrôleur + brancher la recherche partielle par nom FR
 	ctrl := controller.New(tmpl, getByIDOrAll)
 	ctrl.SetSearchByName(func(nom string) (any, error) {
-		all, err := loadPokemonFromJSON("pokemon.json")
+		all, err := getAllPokemonSafe()
 		if err != nil {
 			return nil, err
 		}
