@@ -29,8 +29,8 @@
     <main>
         <div class="pokemon-grid">
             {{range .Pokemons}}
-            <a class="pokemon-card" href="/pokemon/{{.Id}}">
-                <span class="pokemon-number">#{{.Id}}</span>
+            <a class="pokemon-card" href="/pokemon/{{.PokedexID}}">
+                <span class="pokemon-number">#{{.PokedexID}}</span>
                 <img src="{{.Sprites.Regular}}" alt="{{.Name.Fr}}" loading="lazy">
                 <h2 class="pokemon-name">{{.Name.Fr}}</h2>
             </a>
