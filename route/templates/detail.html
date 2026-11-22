@@ -7,29 +7,20 @@
 <body>
     <a href="/pokemon">← Retour à la liste</a>
 
-    {{if .ErrorMsg}}
-        <p>{{.ErrorMsg}}</p>
-    {{else}}
-        {{range .Pokemons}}
-            <article>
-                <h2>#{{.Numero}} - {{.NomFR}}</h2>
-                <p><strong>Catégorie :</strong> {{.Categorie}}</p>
-                <img src="{{.ImageURL}}" alt="{{.NomFR}}" width="140">
+    <article>
+        <h2>#{{.Id}} - {{.Name.Fr}}</h2>
+        <p><strong>Catégorie :</strong> {{.Category}}</p>
+        <img src="{{.Sprites.Regular}}" alt="Illustration de {{.Name.Fr}}" width="140">
 
-                <div>
-                    <strong>Types :</strong>
-                    {{range .Types}}
-                        <span>
-                            <img src="{{.Icon}}" alt="{{.Nom}}" width="24" height="24">
-                            {{.Nom}}
-                        </span>
-                    {{end}}
-                </div>
-            </article>
-            <hr>
-        {{else}}
-            <p>Aucun Pokémon ne correspond à {{.Query}}</p>
-        {{end}}
-    {{end}}
+        <div>
+            <strong>Types :</strong>
+            {{range .Types}}
+                <span>
+                    <img src="{{.Image}}" alt="Icône type {{.Name}}" width="24" height="24">
+                    {{.Name}}
+                </span>
+            {{end}}
+        </div>
+    </article>
 </body>
 </html>

@@ -43,13 +43,12 @@ func chargerPokemonJSON(chemin string) ([]PokemonItem, error) {
 	}
 
 	var liste []PokemonItem
-	err = json.Unmarshal(contenu, &liste)
-	if err == nil {
+	if err := json.Unmarshal(contenu, &liste); err == nil {
 		return liste, nil
 	}
 
 	var unSeul PokemonItem
-	if err2 := json.Unmarshal(contenu, &unSeul); err2 == nil && unSeul.Name.Fr != "" {
+	if err := json.Unmarshal(contenu, &unSeul); err == nil && unSeul.Name.Fr != "" {
 		return []PokemonItem{unSeul}, nil
 	}
 
@@ -65,6 +64,31 @@ func recupererTousLesPokemon() (any, error) {
 	secours, errJSON := chargerPokemonJSON("pokemon.json")
 	if errJSON == nil {
 		return secours, nil
+	}
+
+	return nil, err
+}
+
+func chercherPokemonParID(id int) (any, error) {
+	p, err := api.GetPokemon(id)
+	if err == nil {
+		return p, nil
+	}
+
+	data, errFallback := recupererTousLesPokemon()
+	if errFallback != nil {
+		return nil, err
+	}
+
+	switch liste := data.(type) {
+	case []PokemonItem:
+		for _, item := range liste {
+			if item.Id == id {
+				return item, nil
+			}
+		}
+	case []models.Pokemon:
+		return liste, nil
 	}
 
 	return nil, err
@@ -87,8 +111,23 @@ func filtrerParNom(liste []models.Pokemon, recherche string) []models.Pokemon {
 	return resultat
 }
 
+func filtrerItemsParNom(items []PokemonItem, recherche string) []PokemonItem {
+	motCle := strings.ToLower(strings.TrimSpace(recherche))
+	if motCle == "" {
+		return items
+	}
+
+	var filtres []PokemonItem
+	for _, p := range items {
+		if strings.Contains(strings.ToLower(strings.TrimSpace(p.Name.Fr)), motCle) {
+			filtres = append(filtres, p)
+		}
+	}
+
+	return filtres
+}
+
 func main() {
-	
 	tmpl, err := template.ParseGlob("route/templates/*.html")
 	if err != nil {
 		log.Fatal("Erreur chargement templates : ", err)
@@ -104,7 +143,7 @@ func main() {
 			return nil, models.ErrBadRequest
 		}
 
-		return api.GetPokemon(id)
+		return chercherPokemonParID(id)
 	}
 
 	ctrl := controller.New(tmpl, getByIDOrAll)
@@ -119,18 +158,8 @@ func main() {
 			return filtrerParNom(liste, nom), nil
 		}
 
-		    if items, ok := data.([]PokemonItem); ok {
-			motCle := strings.ToLower(strings.TrimSpace(nom))
-			if motCle == "" {
-				return items, nil
-			}
-			var filtres []PokemonItem
-			for _, p := range items {
-				if strings.Contains(strings.ToLower(strings.TrimSpace(p.Name.Fr)), motCle) {
-					filtres = append(filtres, p)
-				}
-			}
-			return filtres, nil
+		if items, ok := data.([]PokemonItem); ok {
+			return filtrerItemsParNom(items, nom), nil
 		}
 
 		return data, nil
