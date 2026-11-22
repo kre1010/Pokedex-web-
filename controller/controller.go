@@ -1,0 +1,84 @@
+package controller
+
+import (
+	"errors"
+	"html/template"
+	"log"
+	"net/http"
+
+	"pokedex/models"
+)
+
+type ErrorData struct {
+	Code    int
+	Message string
+}
+
+type Controller struct {
+	templates *template.Template
+	getByIDOrAll func(idStr string) (any, error)
+}
+
+func New(templates *template.Template, getByIDOrAll func(idStr string) (any, error)) *Controller {
+	return &Controller{
+		templates:    templates,
+		getByIDOrAll: getByIDOrAll,
+	}
+}
+
+func (c *Controller) showTemplate(w http.ResponseWriter, name string, data any) {
+	if err := c.templates.ExecuteTemplate(w, name, data); err != nil {
+		log.Println("Erreur template :", err)
+	}
+}
+
+func (c *Controller) renderError(w http.ResponseWriter, status int, message string, err error) {
+	if err != nil {
+		log.Println("Erreur :", err)
+	}
+	w.WriteHeader(status)
+	c.showTemplate(w, "error.html", ErrorData{
+		Code:    status,
+		Message: message,
+	})
+}
+
+func (c *Controller) handleServiceError(w http.ResponseWriter, err error) {
+	switch {
+	case errors.Is(err, models.ErrBadRequest):
+		c.renderError(w, http.StatusBadRequest, "Numéro de Pokémon invalide.", err)
+	case errors.Is(err, models.ErrNotFound):
+		c.renderError(w, http.StatusNotFound, "Ce Pokémon n'existe pas.", err)
+	case errors.Is(err, models.ErrUnavailable):
+		c.renderError(w, http.StatusServiceUnavailable, "Service momentanément indisponible.", err)
+	default:
+		c.renderError(w, http.StatusInternalServerError, "Une erreur interne est survenue.", err)
+	}
+}
+
+func (c *Controller) Home(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		c.renderError(w, http.StatusNotFound, "Cette page n'existe pas.", nil)
+		return
+	}
+	http.Redirect(w, r, "/pokemon", http.StatusMovedPermanently)
+}
+
+func (c *Controller) ListPokemon(w http.ResponseWriter, r *http.Request) {
+	pokemons, err := c.getByIDOrAll("")
+	if err != nil {
+		c.handleServiceError(w, err)
+		return
+	}
+	c.showTemplate(w, "pokemon.html", pokemons)
+}
+
+func (c *Controller) DetailPokemon(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	pokemon, err := c.getByIDOrAll(idStr)
+	if err != nil {
+		c.handleServiceError(w, err)
+		return
+	}
+	c.showTemplate(w, "detail.html", pokemon)
+}
