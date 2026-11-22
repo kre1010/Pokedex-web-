@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -30,10 +31,24 @@ type PokemonType struct {
 
 type PokemonItem struct {
 	PokedexID int            `json:"pokedex_id"`
+	ID        int            `json:"id"`
 	Category  string         `json:"category"`
 	Name      PokemonName    `json:"name"`
 	Sprites   PokemonSprites `json:"sprites"`
 	Types     []PokemonType  `json:"types"`
+}
+
+func (p *PokemonItem) UnmarshalJSON(data []byte) error {
+	type Alias PokemonItem
+	aux := (*Alias)(p)
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	// Si le JSON utilise "id" au lieu de "pokedex_id", on récupère l'ID
+	if p.PokedexID == 0 && p.ID != 0 {
+		p.PokedexID = p.ID
+	}
+	return nil
 }
 
 func loadPokemonFromJSON(path string) ([]PokemonItem, error) {
@@ -42,12 +57,52 @@ func loadPokemonFromJSON(path string) ([]PokemonItem, error) {
 		return nil, err
 	}
 
-	var list []PokemonItem
-	if err := json.Unmarshal(data, &list); err != nil {
+	trimmed := bytes.TrimSpace(data)
+
+	// Cas 1 : le JSON commence par '[' -> tableau direct
+	if len(trimmed) > 0 && trimmed[0] == '[' {
+		var list []PokemonItem
+		if err := json.Unmarshal(trimmed, &list); err != nil {
+			return nil, err
+		}
+		return list, nil
+	}
+
+	// Cas 2 : le JSON commence par '{' -> objet avec une clé liste (ex: pokemons, data, results, items...)
+	var wrapper map[string]json.RawMessage
+	if err := json.Unmarshal(trimmed, &wrapper); err != nil {
 		return nil, err
 	}
 
-	return list, nil
+	for _, key := range []string{"pokemons", "pokemon", "data", "results", "items", "list"} {
+		if raw, ok := wrapper[key]; ok {
+			var list []PokemonItem
+			if err := json.Unmarshal(raw, &list); err == nil && len(list) > 0 {
+				return list, nil
+			}
+		}
+	}
+
+	// Si l'objet contient directement des clés de Pokémon (ex: un seul Pokémon ou une map par ID)
+	var single PokemonItem
+	if err := json.Unmarshal(trimmed, &single); err == nil && (single.PokedexID != 0 || single.Name.Fr != "") {
+		return []PokemonItem{single}, nil
+	}
+
+	var byKey map[string]PokemonItem
+	if err := json.Unmarshal(trimmed, &byKey); err == nil && len(byKey) > 0 {
+		var list []PokemonItem
+		for _, item := range byKey {
+			if item.PokedexID != 0 || item.Name.Fr != "" {
+				list = append(list, item)
+			}
+		}
+		if len(list) > 0 {
+			return list, nil
+		}
+	}
+
+	return nil, fmt.Errorf("format JSON non reconnu dans %s", path)
 }
 
 func filterPokemonByName(list []PokemonItem, nom string) []PokemonItem {
