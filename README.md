@@ -1,21 +1,5 @@
-GET/api/v1/pokemon il y a 1025 pokemon les nom français sont ranger de cette manière  "name": {
-            "fr": "Pêchaminus",
-            "en": "Pecharunt",
-            "jp": "モモワロウ"
-        } 
-le premier pokemon n'est pas un vrai pokemon c'est un pokemon bug
-
-Get/api/v1/pokemon/25 la fiche de pikachu s'affiche bien {
-    "pokedex_id": 25,
-    "generation": 1,
-    "category": "Pokémon Souris",
-    "name": {
-        "fr": "Pikachu",
-        "en": "Pikachu",
-        "jp": "ピカチュウ"
-    },
-
-GET/api/v1/pokemon/9999 quand un pokemon n'existe Postman affiche {
-    "status": 404,
-    "message": "Impossible de trouver le Pokémon dans la base de données."
-}
+Pour lancer le jeu dans le terminal VScode il suffit de tapper go run . et le http apparait.
+Pour réaliser le projet qui etait asser complexe mais grace a lilian les collegues la documentation et des video youtube 
+j'ai reussis a réaliser un pokedex avec une fonction de recherche et une carte pour chaque pokemon.
+Durant le projet un des point que j'zi trouvé complique c'est l'organisation de l'arboresence , quelque chose de simple mais j'ai du mal avec sa.Le css qui est encore flou et compliqué pour moi sinon le reste a part en y consacrant beaucoup de temps sa a plutôt marché.
+Si je devrais m'amélioré sa serait sur le html plus pratiquer et en vrais continuer des exercices comme sur ytrack et continuer la theorie. 
